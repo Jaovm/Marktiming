@@ -1,0 +1,11 @@
+streamlit==1.31.0
+pandas==2.2.0
+numpy==1.26.3
+plotly==5.18.0
+yfinance==0.2.36
+requests==2.31.0
+statsmodels==0.14.1
+scikit-learn==1.4.0
+matplotlib==3.8.2
+seaborn==0.13.1
+python-bcb==0.1.7
