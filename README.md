@@ -4,24 +4,21 @@ Este projeto implementa um dashboard interativo em Streamlit focado no mercado b
 
 ## Estrutura do Projeto
 
+O projeto foi organizado com todos os arquivos na pasta raiz para facilitar a execução:
+
 ```
-market_timing_dashboard/
-├── data/                  # Dados armazenados localmente
-├── src/                   # Código-fonte do projeto
-│   ├── analysis/          # Módulos de análise
-│   │   ├── allocation.py  # Recomendação de alocação setorial
-│   │   ├── cycle.py       # Identificação do ciclo econômico
-│   │   └── valuation.py   # Análise de valuation
-│   ├── data/              # Módulos de coleta de dados
-│   │   ├── macro_data.py  # Dados macroeconômicos
-│   │   └── market_data.py # Dados de mercado
-│   ├── visualization/     # Módulos de visualização
-│   │   ├── allocation_charts.py  # Gráficos de alocação
-│   │   ├── cycle_charts.py       # Gráficos de ciclo econômico
-│   │   ├── macro_charts.py       # Gráficos macroeconômicos
-│   │   └── market_charts.py      # Gráficos de mercado
-│   ├── app.py             # Aplicativo Streamlit principal
-│   └── config.py          # Configurações globais
+market_timing_dashboard_flat/
+├── app.py                 # Aplicativo Streamlit principal
+├── config.py              # Configurações globais
+├── macro_data.py          # Coleta de dados macroeconômicos
+├── market_data.py         # Coleta de dados de mercado
+├── valuation.py           # Análise de valuation
+├── cycle.py               # Identificação do ciclo econômico
+├── allocation.py          # Recomendação de alocação setorial
+├── macro_charts.py        # Visualização de dados macroeconômicos
+├── market_charts.py       # Visualização de dados de mercado
+├── cycle_charts.py        # Visualização do ciclo econômico
+├── allocation_charts.py   # Visualização de alocação setorial
 ├── requirements.txt       # Dependências do projeto
 └── README.md              # Documentação
 ```
@@ -37,7 +34,7 @@ market_timing_dashboard/
 
 ```bash
 git clone <url-do-repositorio>
-cd market_timing_dashboard
+cd market_timing_dashboard_flat
 ```
 
 2. Crie um ambiente virtual e instale as dependências:
@@ -53,9 +50,7 @@ pip install -r requirements.txt
 Para iniciar o dashboard:
 
 ```bash
-cd market_timing_dashboard
-source venv/bin/activate  # No Windows: venv\Scripts\activate
-streamlit run src/app.py
+streamlit run app.py
 ```
 
 O aplicativo será aberto automaticamente no seu navegador padrão. Se não abrir, acesse `http://localhost:8501`.
@@ -106,7 +101,7 @@ O aplicativo será aberto automaticamente no seu navegador padrão. Se não abri
 
 3. **Finalidade Educacional**: Este dashboard foi desenvolvido para fins educacionais e não constitui recomendação de investimento.
 
-4. **Personalização**: Para personalizar a carteira base, edite o arquivo `src/config.py`.
+4. **Personalização**: Para personalizar a carteira base, edite o arquivo `config.py`.
 
 ## Solução de Problemas
 

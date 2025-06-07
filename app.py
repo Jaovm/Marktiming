@@ -1,5 +1,5 @@
 """
-Módulo principal do aplicativo Streamlit para o Painel Inteligente de Market Timing e Análise Macroeconômica.
+Painel Inteligente de Market Timing e Análise Macroeconômica
 
 Este módulo contém a configuração principal do Streamlit e a estrutura de navegação
 entre as diferentes páginas do dashboard.
@@ -13,32 +13,29 @@ import sys
 from pathlib import Path
 from datetime import datetime
 
-# Adiciona o diretório raiz ao path para importar os módulos do projeto
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 # Importa os módulos do projeto
 from config import THEME, SETORES_B3, CARTEIRA_BASE
-from data.macro_data import get_all_macro_data, get_macro_summary
-from data.market_data import (
+from macro_data import get_all_macro_data, get_macro_summary
+from market_data import (
     get_index_data, get_sector_data, get_sector_valuation,
     get_fed_model_data, get_market_summary, get_portfolio_data
 )
-from analysis.valuation import (
+from valuation import (
     calcular_premio_risco, classificar_valuation_setorial,
     comparar_setores_historico, analisar_carteira
 )
-from analysis.cycle import (
+from cycle import (
     identificar_fase_ciclo, calcular_market_timing_score,
     gerar_alertas_market_timing
 )
-from analysis.allocation import (
+from allocation import (
     recomendar_alocacao_setorial, analisar_alinhamento_carteira,
     sugerir_ajuste_risco_carteira
 )
-from visualization.macro_charts import criar_dashboard_macro, criar_tabela_resumo_macro
-from visualization.market_charts import criar_dashboard_mercado, criar_tabela_resumo_mercado
-from visualization.cycle_charts import criar_dashboard_ciclo
-from visualization.allocation_charts import criar_dashboard_alocacao
+from macro_charts import criar_dashboard_macro, criar_tabela_resumo_macro, criar_heatmap_correlacao_macro
+from market_charts import criar_dashboard_mercado, criar_tabela_resumo_mercado
+from cycle_charts import criar_dashboard_ciclo
+from allocation_charts import criar_dashboard_alocacao
 
 # Configuração da página
 st.set_page_config(

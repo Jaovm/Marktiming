@@ -1,664 +1,372 @@
 """
 Módulo para visualização de dados macroeconômicos.
 
-Este módulo contém funções para criar gráficos e visualizações dos indicadores
-macroeconômicos brasileiros, como PIB, inflação, juros, desemprego, liquidez e risco.
+Este módulo contém funções para criar gráficos e visualizações
+dos indicadores macroeconômicos do Brasil.
 """
 
+import pandas as pd
+import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
-import pandas as pd
-import numpy as np
-from typing import Dict, List, Optional, Union, Tuple
-
-def criar_grafico_pib(dados_pib: pd.DataFrame) -> go.Figure:
-    """
-    Cria um gráfico com a evolução do PIB brasileiro.
-    
-    Args:
-        dados_pib: DataFrame com os dados do PIB.
-        
-    Returns:
-        go.Figure: Figura do Plotly com o gráfico do PIB.
-    """
-    if dados_pib.empty:
-        # Retorna um gráfico vazio se não houver dados
-        fig = go.Figure()
-        fig.update_layout(
-            title="Dados do PIB não disponíveis",
-            xaxis_title="Data",
-            yaxis_title="Valor"
-        )
-        return fig
-    
-    # Cria um gráfico com duas métricas: valor e variação
-    fig = make_subplots(specs=[[{"secondary_y": True}]])
-    
-    # Adiciona o valor do PIB
-    if 'pib_valor' in dados_pib.columns:
-        fig.add_trace(
-            go.Scatter(
-                x=dados_pib.index,
-                y=dados_pib['pib_valor'],
-                name="PIB (R$ milhões)",
-                line=dict(color="#1E88E5", width=2)
-            ),
-            secondary_y=False
-        )
-    
-    # Adiciona a variação do PIB
-    if 'pib_variacao' in dados_pib.columns:
-        fig.add_trace(
-            go.Bar(
-                x=dados_pib.index,
-                y=dados_pib['pib_variacao'],
-                name="Variação Anual (%)",
-                marker_color="#FFC107"
-            ),
-            secondary_y=True
-        )
-    
-    # Configura os eixos
-    fig.update_layout(
-        title="Evolução do PIB Brasileiro",
-        xaxis_title="Data",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
-        ),
-        template="plotly_white",
-        height=500
-    )
-    
-    fig.update_yaxes(
-        title_text="PIB (R$ milhões)",
-        secondary_y=False
-    )
-    
-    fig.update_yaxes(
-        title_text="Variação Anual (%)",
-        secondary_y=True
-    )
-    
-    return fig
-
-def criar_grafico_inflacao(dados_inflacao: pd.DataFrame) -> go.Figure:
-    """
-    Cria um gráfico com a evolução da inflação brasileira.
-    
-    Args:
-        dados_inflacao: DataFrame com os dados de inflação.
-        
-    Returns:
-        go.Figure: Figura do Plotly com o gráfico de inflação.
-    """
-    if dados_inflacao.empty:
-        # Retorna um gráfico vazio se não houver dados
-        fig = go.Figure()
-        fig.update_layout(
-            title="Dados de inflação não disponíveis",
-            xaxis_title="Data",
-            yaxis_title="Valor"
-        )
-        return fig
-    
-    # Cria um gráfico com IPCA e IGP-M acumulados em 12 meses
-    fig = go.Figure()
-    
-    # Adiciona o IPCA acumulado em 12 meses
-    if 'ipca_acumulado_12m' in dados_inflacao.columns:
-        fig.add_trace(
-            go.Scatter(
-                x=dados_inflacao.index,
-                y=dados_inflacao['ipca_acumulado_12m'],
-                name="IPCA (12 meses)",
-                line=dict(color="#1E88E5", width=2)
-            )
-        )
-    
-    # Adiciona o IGP-M acumulado em 12 meses
-    if 'igpm_acumulado_12m' in dados_inflacao.columns:
-        fig.add_trace(
-            go.Scatter(
-                x=dados_inflacao.index,
-                y=dados_inflacao['igpm_acumulado_12m'],
-                name="IGP-M (12 meses)",
-                line=dict(color="#F44336", width=2)
-            )
-        )
-    
-    # Adiciona linha horizontal na meta de inflação (3.5%)
-    fig.add_shape(
-        type="line",
-        x0=dados_inflacao.index.min(),
-        y0=3.5,
-        x1=dados_inflacao.index.max(),
-        y1=3.5,
-        line=dict(
-            color="#4CAF50",
-            width=2,
-            dash="dash",
-        )
-    )
-    
-    # Adiciona anotação para a meta de inflação
-    fig.add_annotation(
-        x=dados_inflacao.index.max(),
-        y=3.5,
-        text="Meta de Inflação",
-        showarrow=False,
-        yshift=10,
-        font=dict(
-            color="#4CAF50"
-        )
-    )
-    
-    # Configura o layout
-    fig.update_layout(
-        title="Evolução da Inflação Brasileira",
-        xaxis_title="Data",
-        yaxis_title="Variação Acumulada 12 meses (%)",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
-        ),
-        template="plotly_white",
-        height=500
-    )
-    
-    return fig
-
-def criar_grafico_juros(dados_juros: pd.DataFrame) -> go.Figure:
-    """
-    Cria um gráfico com a evolução da taxa de juros brasileira.
-    
-    Args:
-        dados_juros: DataFrame com os dados de juros.
-        
-    Returns:
-        go.Figure: Figura do Plotly com o gráfico de juros.
-    """
-    if dados_juros.empty:
-        # Retorna um gráfico vazio se não houver dados
-        fig = go.Figure()
-        fig.update_layout(
-            title="Dados de juros não disponíveis",
-            xaxis_title="Data",
-            yaxis_title="Taxa (%)"
-        )
-        return fig
-    
-    # Cria um gráfico com a taxa Selic
-    fig = go.Figure()
-    
-    # Adiciona a taxa Selic meta
-    if 'selic_meta' in dados_juros.columns:
-        fig.add_trace(
-            go.Scatter(
-                x=dados_juros.index,
-                y=dados_juros['selic_meta'],
-                name="Taxa Selic Meta",
-                line=dict(color="#1E88E5", width=2)
-            )
-        )
-    
-    # Adiciona a taxa Selic diária
-    if 'selic_diaria' in dados_juros.columns:
-        fig.add_trace(
-            go.Scatter(
-                x=dados_juros.index,
-                y=dados_juros['selic_diaria'],
-                name="Taxa Selic Diária",
-                line=dict(color="#F44336", width=1, dash="dot")
-            )
-        )
-    
-    # Configura o layout
-    fig.update_layout(
-        title="Evolução da Taxa Selic",
-        xaxis_title="Data",
-        yaxis_title="Taxa (%)",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
-        ),
-        template="plotly_white",
-        height=500
-    )
-    
-    return fig
-
-def criar_grafico_curva_juros(dados_curva_juros: pd.DataFrame) -> go.Figure:
-    """
-    Cria um gráfico com a curva de juros brasileira.
-    
-    Args:
-        dados_curva_juros: DataFrame com os dados da curva de juros.
-        
-    Returns:
-        go.Figure: Figura do Plotly com o gráfico da curva de juros.
-    """
-    if dados_curva_juros.empty:
-        # Retorna um gráfico vazio se não houver dados
-        fig = go.Figure()
-        fig.update_layout(
-            title="Dados da curva de juros não disponíveis",
-            xaxis_title="Prazo",
-            yaxis_title="Taxa (%)"
-        )
-        return fig
-    
-    # Obtém os dados mais recentes
-    ultimo_dia = dados_curva_juros.iloc[-1]
-    
-    # Prazos em dias
-    prazos = [30, 90, 180, 360, 720, 1080]
-    
-    # Taxas correspondentes
-    taxas = []
-    for prazo in [30, 90, 180, 360, 720, 1080]:
-        coluna = f'di_{prazo}d'
-        if coluna in ultimo_dia.index:
-            taxas.append(ultimo_dia[coluna])
-        else:
-            taxas.append(None)
-    
-    # Cria o gráfico da curva de juros atual
-    fig = go.Figure()
-    
-    fig.add_trace(
-        go.Scatter(
-            x=prazos,
-            y=taxas,
-            mode='lines+markers',
-            name="Curva Atual",
-            line=dict(color="#1E88E5", width=2),
-            marker=dict(size=8)
-        )
-    )
-    
-    # Se houver dados de 30 dias atrás, adiciona para comparação
-    if len(dados_curva_juros) > 30:
-        dia_anterior = dados_curva_juros.iloc[-30]
-        
-        taxas_anterior = []
-        for prazo in [30, 90, 180, 360, 720, 1080]:
-            coluna = f'di_{prazo}d'
-            if coluna in dia_anterior.index:
-                taxas_anterior.append(dia_anterior[coluna])
-            else:
-                taxas_anterior.append(None)
-        
-        fig.add_trace(
-            go.Scatter(
-                x=prazos,
-                y=taxas_anterior,
-                mode='lines+markers',
-                name="Curva 30 dias atrás",
-                line=dict(color="#F44336", width=2, dash="dash"),
-                marker=dict(size=6)
-            )
-        )
-    
-    # Configura o layout
-    fig.update_layout(
-        title="Curva de Juros Brasileira",
-        xaxis_title="Prazo (dias)",
-        yaxis_title="Taxa (%)",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
-        ),
-        template="plotly_white",
-        height=500
-    )
-    
-    # Configura o eixo X para mostrar os prazos em meses/anos
-    fig.update_xaxes(
-        tickvals=prazos,
-        ticktext=["1 mês", "3 meses", "6 meses", "1 ano", "2 anos", "3 anos"]
-    )
-    
-    return fig
-
-def criar_grafico_trabalho(dados_trabalho: pd.DataFrame) -> go.Figure:
-    """
-    Cria um gráfico com os dados do mercado de trabalho brasileiro.
-    
-    Args:
-        dados_trabalho: DataFrame com os dados do mercado de trabalho.
-        
-    Returns:
-        go.Figure: Figura do Plotly com o gráfico do mercado de trabalho.
-    """
-    if dados_trabalho.empty:
-        # Retorna um gráfico vazio se não houver dados
-        fig = go.Figure()
-        fig.update_layout(
-            title="Dados do mercado de trabalho não disponíveis",
-            xaxis_title="Data",
-            yaxis_title="Valor"
-        )
-        return fig
-    
-    # Cria um gráfico com duas métricas: desemprego e saldo do CAGED
-    fig = make_subplots(specs=[[{"secondary_y": True}]])
-    
-    # Adiciona a taxa de desemprego
-    if 'desemprego' in dados_trabalho.columns:
-        fig.add_trace(
-            go.Scatter(
-                x=dados_trabalho.index,
-                y=dados_trabalho['desemprego'],
-                name="Taxa de Desemprego (%)",
-                line=dict(color="#1E88E5", width=2)
-            ),
-            secondary_y=False
-        )
-    
-    # Adiciona o saldo do CAGED
-    if 'caged_saldo' in dados_trabalho.columns:
-        fig.add_trace(
-            go.Bar(
-                x=dados_trabalho.index,
-                y=dados_trabalho['caged_saldo'],
-                name="Saldo de Empregos (CAGED)",
-                marker_color="#4CAF50"
-            ),
-            secondary_y=True
-        )
-    
-    # Configura os eixos
-    fig.update_layout(
-        title="Mercado de Trabalho Brasileiro",
-        xaxis_title="Data",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
-        ),
-        template="plotly_white",
-        height=500
-    )
-    
-    fig.update_yaxes(
-        title_text="Taxa de Desemprego (%)",
-        secondary_y=False
-    )
-    
-    fig.update_yaxes(
-        title_text="Saldo de Empregos",
-        secondary_y=True
-    )
-    
-    return fig
-
-def criar_grafico_liquidez(dados_liquidez: pd.DataFrame) -> go.Figure:
-    """
-    Cria um gráfico com os dados de liquidez e agregados monetários brasileiros.
-    
-    Args:
-        dados_liquidez: DataFrame com os dados de liquidez.
-        
-    Returns:
-        go.Figure: Figura do Plotly com o gráfico de liquidez.
-    """
-    if dados_liquidez.empty:
-        # Retorna um gráfico vazio se não houver dados
-        fig = go.Figure()
-        fig.update_layout(
-            title="Dados de liquidez não disponíveis",
-            xaxis_title="Data",
-            yaxis_title="Valor"
-        )
-        return fig
-    
-    # Cria um gráfico com os agregados monetários
-    fig = go.Figure()
-    
-    # Adiciona M1
-    if 'm1' in dados_liquidez.columns:
-        fig.add_trace(
-            go.Scatter(
-                x=dados_liquidez.index,
-                y=dados_liquidez['m1'] / 1e9,  # Converte para bilhões
-                name="M1",
-                line=dict(color="#1E88E5", width=2)
-            )
-        )
-    
-    # Adiciona M2
-    if 'm2' in dados_liquidez.columns:
-        fig.add_trace(
-            go.Scatter(
-                x=dados_liquidez.index,
-                y=dados_liquidez['m2'] / 1e9,  # Converte para bilhões
-                name="M2",
-                line=dict(color="#F44336", width=2)
-            )
-        )
-    
-    # Adiciona M3
-    if 'm3' in dados_liquidez.columns:
-        fig.add_trace(
-            go.Scatter(
-                x=dados_liquidez.index,
-                y=dados_liquidez['m3'] / 1e9,  # Converte para bilhões
-                name="M3",
-                line=dict(color="#4CAF50", width=2)
-            )
-        )
-    
-    # Adiciona M4
-    if 'm4' in dados_liquidez.columns:
-        fig.add_trace(
-            go.Scatter(
-                x=dados_liquidez.index,
-                y=dados_liquidez['m4'] / 1e9,  # Converte para bilhões
-                name="M4",
-                line=dict(color="#FFC107", width=2)
-            )
-        )
-    
-    # Configura o layout
-    fig.update_layout(
-        title="Agregados Monetários Brasileiros",
-        xaxis_title="Data",
-        yaxis_title="Valor (R$ bilhões)",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
-        ),
-        template="plotly_white",
-        height=500
-    )
-    
-    return fig
-
-def criar_grafico_risco(dados_risco: pd.DataFrame) -> go.Figure:
-    """
-    Cria um gráfico com os indicadores de risco do Brasil.
-    
-    Args:
-        dados_risco: DataFrame com os dados de risco.
-        
-    Returns:
-        go.Figure: Figura do Plotly com o gráfico de risco.
-    """
-    if dados_risco.empty:
-        # Retorna um gráfico vazio se não houver dados
-        fig = go.Figure()
-        fig.update_layout(
-            title="Dados de risco não disponíveis",
-            xaxis_title="Data",
-            yaxis_title="Valor"
-        )
-        return fig
-    
-    # Cria um gráfico com duas métricas: EMBI+ e CDS
-    fig = make_subplots(specs=[[{"secondary_y": True}]])
-    
-    # Adiciona o EMBI+
-    if 'embi' in dados_risco.columns:
-        fig.add_trace(
-            go.Scatter(
-                x=dados_risco.index,
-                y=dados_risco['embi'],
-                name="EMBI+ Brasil",
-                line=dict(color="#1E88E5", width=2)
-            ),
-            secondary_y=False
-        )
-    
-    # Adiciona o CDS
-    if 'GAP12_CRDSCBR5Y' in dados_risco.columns:
-        fig.add_trace(
-            go.Scatter(
-                x=dados_risco.index,
-                y=dados_risco['GAP12_CRDSCBR5Y'],
-                name="CDS Brasil 5 anos",
-                line=dict(color="#F44336", width=2)
-            ),
-            secondary_y=True
-        )
-    
-    # Configura os eixos
-    fig.update_layout(
-        title="Indicadores de Risco do Brasil",
-        xaxis_title="Data",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
-        ),
-        template="plotly_white",
-        height=500
-    )
-    
-    fig.update_yaxes(
-        title_text="EMBI+ Brasil (pontos)",
-        secondary_y=False
-    )
-    
-    fig.update_yaxes(
-        title_text="CDS Brasil 5 anos (pontos)",
-        secondary_y=True
-    )
-    
-    return fig
+from typing import Dict, List, Optional, Union
 
 def criar_dashboard_macro(dados_macro: Dict[str, pd.DataFrame]) -> Dict[str, go.Figure]:
     """
-    Cria um dashboard completo com todos os indicadores macroeconômicos.
+    Cria um dashboard com gráficos dos principais indicadores macroeconômicos.
     
     Args:
-        dados_macro: Dicionário com DataFrames de dados macroeconômicos.
+        dados_macro: Dicionário com DataFrames dos dados macroeconômicos.
         
     Returns:
-        Dict[str, go.Figure]: Dicionário com figuras do Plotly para cada indicador.
+        Dict[str, go.Figure]: Dicionário com os gráficos do dashboard.
     """
-    dashboard = {}
+    # Inicializa o dicionário de gráficos
+    graficos = {}
     
-    # Cria gráfico do PIB
-    if 'pib' in dados_macro:
-        dashboard['pib'] = criar_grafico_pib(dados_macro['pib'])
+    # Gráfico do PIB
+    if 'pib' in dados_macro and not dados_macro['pib'].empty:
+        fig_pib = make_subplots(specs=[[{"secondary_y": True}]])
+        
+        # Adiciona o valor do PIB
+        if 'pib_valor' in dados_macro['pib'].columns:
+            fig_pib.add_trace(
+                go.Scatter(
+                    x=dados_macro['pib'].index,
+                    y=dados_macro['pib']['pib_valor'],
+                    name="PIB (R$ milhões)",
+                    line=dict(color="#1E88E5", width=2)
+                ),
+                secondary_y=False
+            )
+        
+        # Adiciona a variação do PIB
+        if 'pib_variacao' in dados_macro['pib'].columns:
+            fig_pib.add_trace(
+                go.Scatter(
+                    x=dados_macro['pib'].index,
+                    y=dados_macro['pib']['pib_variacao'],
+                    name="Variação Anual (%)",
+                    line=dict(color="#4CAF50", width=2, dash='dash')
+                ),
+                secondary_y=True
+            )
+        
+        # Configura os eixos
+        fig_pib.update_layout(
+            title="PIB - Produto Interno Bruto",
+            xaxis_title="Data",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        fig_pib.update_yaxes(title_text="PIB (R$ milhões)", secondary_y=False)
+        fig_pib.update_yaxes(title_text="Variação Anual (%)", secondary_y=True)
+        
+        # Adiciona o gráfico ao dicionário
+        graficos['pib'] = fig_pib
     
-    # Cria gráfico de inflação
-    if 'inflacao' in dados_macro:
-        dashboard['inflacao'] = criar_grafico_inflacao(dados_macro['inflacao'])
+    # Gráfico da inflação
+    if 'inflacao' in dados_macro and not dados_macro['inflacao'].empty:
+        fig_inflacao = make_subplots(specs=[[{"secondary_y": True}]])
+        
+        # Adiciona o IPCA acumulado em 12 meses
+        if 'ipca_acumulado_12m' in dados_macro['inflacao'].columns:
+            fig_inflacao.add_trace(
+                go.Scatter(
+                    x=dados_macro['inflacao'].index,
+                    y=dados_macro['inflacao']['ipca_acumulado_12m'],
+                    name="IPCA (12 meses)",
+                    line=dict(color="#1E88E5", width=2)
+                ),
+                secondary_y=False
+            )
+        
+        # Adiciona o IGP-M acumulado em 12 meses
+        if 'igpm_acumulado_12m' in dados_macro['inflacao'].columns:
+            fig_inflacao.add_trace(
+                go.Scatter(
+                    x=dados_macro['inflacao'].index,
+                    y=dados_macro['inflacao']['igpm_acumulado_12m'],
+                    name="IGP-M (12 meses)",
+                    line=dict(color="#F44336", width=2)
+                ),
+                secondary_y=False
+            )
+        
+        # Adiciona o IPCA mensal
+        if 'ipca_mensal' in dados_macro['inflacao'].columns:
+            fig_inflacao.add_trace(
+                go.Bar(
+                    x=dados_macro['inflacao'].index,
+                    y=dados_macro['inflacao']['ipca_mensal'],
+                    name="IPCA Mensal",
+                    marker_color="#2196F3",
+                    opacity=0.5
+                ),
+                secondary_y=True
+            )
+        
+        # Configura os eixos
+        fig_inflacao.update_layout(
+            title="Inflação - IPCA e IGP-M",
+            xaxis_title="Data",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        fig_inflacao.update_yaxes(title_text="Acumulado 12 meses (%)", secondary_y=False)
+        fig_inflacao.update_yaxes(title_text="Mensal (%)", secondary_y=True)
+        
+        # Adiciona o gráfico ao dicionário
+        graficos['inflacao'] = fig_inflacao
     
-    # Cria gráfico de juros
-    if 'juros' in dados_macro:
-        dashboard['juros'] = criar_grafico_juros(dados_macro['juros'])
+    # Gráfico da taxa de juros
+    if 'juros' in dados_macro and not dados_macro['juros'].empty:
+        fig_juros = go.Figure()
+        
+        # Adiciona a Selic meta
+        if 'selic_meta' in dados_macro['juros'].columns:
+            fig_juros.add_trace(
+                go.Scatter(
+                    x=dados_macro['juros'].index,
+                    y=dados_macro['juros']['selic_meta'],
+                    name="Selic Meta",
+                    line=dict(color="#1E88E5", width=2)
+                )
+            )
+        
+        # Adiciona a Selic diária
+        if 'selic_diaria' in dados_macro['juros'].columns:
+            fig_juros.add_trace(
+                go.Scatter(
+                    x=dados_macro['juros'].index,
+                    y=dados_macro['juros']['selic_diaria'],
+                    name="Selic Diária",
+                    line=dict(color="#4CAF50", width=1, dash='dot')
+                )
+            )
+        
+        # Configura os eixos
+        fig_juros.update_layout(
+            title="Taxa de Juros - Selic",
+            xaxis_title="Data",
+            yaxis_title="Taxa (% a.a.)",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        
+        # Adiciona o gráfico ao dicionário
+        graficos['juros'] = fig_juros
     
-    # Cria gráfico da curva de juros
-    if 'curva_juros' in dados_macro:
-        dashboard['curva_juros'] = criar_grafico_curva_juros(dados_macro['curva_juros'])
+    # Gráfico da curva de juros
+    if 'curva_juros' in dados_macro and not dados_macro['curva_juros'].empty:
+        # Obtém a data mais recente
+        data_recente = dados_macro['curva_juros'].index.max()
+        
+        # Obtém os dados da curva de juros mais recente
+        curva_recente = dados_macro['curva_juros'].loc[data_recente]
+        
+        # Cria um DataFrame com os prazos e taxas
+        prazos = {
+            'di_30d': 1,
+            'di_90d': 3,
+            'di_180d': 6,
+            'di_360d': 12,
+            'di_720d': 24,
+            'di_1080d': 36
+        }
+        
+        df_curva = pd.DataFrame(columns=['Prazo (meses)', 'Taxa (% a.a.)'])
+        
+        for coluna, prazo in prazos.items():
+            if coluna in dados_macro['curva_juros'].columns:
+                df_curva = pd.concat([df_curva, pd.DataFrame({
+                    'Prazo (meses)': [prazo],
+                    'Taxa (% a.a.)': [curva_recente[coluna]]
+                })])
+        
+        # Ordena o DataFrame pelo prazo
+        df_curva = df_curva.sort_values('Prazo (meses)')
+        
+        # Cria o gráfico da curva de juros
+        fig_curva = go.Figure()
+        
+        fig_curva.add_trace(
+            go.Scatter(
+                x=df_curva['Prazo (meses)'],
+                y=df_curva['Taxa (% a.a.)'],
+                mode='lines+markers',
+                name="Curva de Juros",
+                line=dict(color="#1E88E5", width=2),
+                marker=dict(size=8)
+            )
+        )
+        
+        # Configura os eixos
+        fig_curva.update_layout(
+            title=f"Curva de Juros - {data_recente.strftime('%d/%m/%Y')}",
+            xaxis_title="Prazo (meses)",
+            yaxis_title="Taxa (% a.a.)",
+            xaxis=dict(
+                tickmode='array',
+                tickvals=list(prazos.values())
+            )
+        )
+        
+        # Adiciona o gráfico ao dicionário
+        graficos['curva_juros'] = fig_curva
     
-    # Cria gráfico do mercado de trabalho
-    if 'trabalho' in dados_macro:
-        dashboard['trabalho'] = criar_grafico_trabalho(dados_macro['trabalho'])
+    # Gráfico do mercado de trabalho
+    if 'trabalho' in dados_macro and not dados_macro['trabalho'].empty:
+        fig_trabalho = make_subplots(specs=[[{"secondary_y": True}]])
+        
+        # Adiciona a taxa de desemprego
+        if 'desemprego' in dados_macro['trabalho'].columns:
+            fig_trabalho.add_trace(
+                go.Scatter(
+                    x=dados_macro['trabalho'].index,
+                    y=dados_macro['trabalho']['desemprego'],
+                    name="Taxa de Desemprego",
+                    line=dict(color="#F44336", width=2)
+                ),
+                secondary_y=False
+            )
+        
+        # Adiciona o saldo do CAGED
+        if 'caged_saldo' in dados_macro['trabalho'].columns:
+            fig_trabalho.add_trace(
+                go.Bar(
+                    x=dados_macro['trabalho'].index,
+                    y=dados_macro['trabalho']['caged_saldo'],
+                    name="Saldo de Empregos (CAGED)",
+                    marker_color="#4CAF50"
+                ),
+                secondary_y=True
+            )
+        
+        # Configura os eixos
+        fig_trabalho.update_layout(
+            title="Mercado de Trabalho",
+            xaxis_title="Data",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        fig_trabalho.update_yaxes(title_text="Taxa de Desemprego (%)", secondary_y=False)
+        fig_trabalho.update_yaxes(title_text="Saldo de Empregos", secondary_y=True)
+        
+        # Adiciona o gráfico ao dicionário
+        graficos['trabalho'] = fig_trabalho
     
-    # Cria gráfico de liquidez
-    if 'liquidez' in dados_macro:
-        dashboard['liquidez'] = criar_grafico_liquidez(dados_macro['liquidez'])
+    # Gráfico de liquidez
+    if 'liquidez' in dados_macro and not dados_macro['liquidez'].empty:
+        fig_liquidez = go.Figure()
+        
+        # Adiciona os agregados monetários
+        for coluna, nome, cor in [
+            ('m1', 'M1', "#1E88E5"),
+            ('m2', 'M2', "#4CAF50"),
+            ('m3', 'M3', "#FFC107"),
+            ('m4', 'M4', "#F44336")
+        ]:
+            if coluna in dados_macro['liquidez'].columns:
+                fig_liquidez.add_trace(
+                    go.Scatter(
+                        x=dados_macro['liquidez'].index,
+                        y=dados_macro['liquidez'][coluna],
+                        name=nome,
+                        line=dict(color=cor, width=2)
+                    )
+                )
+        
+        # Configura os eixos
+        fig_liquidez.update_layout(
+            title="Agregados Monetários",
+            xaxis_title="Data",
+            yaxis_title="Valor (R$ milhões)",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        
+        # Adiciona o gráfico ao dicionário
+        graficos['liquidez'] = fig_liquidez
     
-    # Cria gráfico de risco
-    if 'risco' in dados_macro:
-        dashboard['risco'] = criar_grafico_risco(dados_macro['risco'])
+    # Gráfico de risco
+    if 'risco' in dados_macro and not dados_macro['risco'].empty:
+        fig_risco = make_subplots(specs=[[{"secondary_y": True}]])
+        
+        # Adiciona o EMBI+
+        if 'embi' in dados_macro['risco'].columns:
+            fig_risco.add_trace(
+                go.Scatter(
+                    x=dados_macro['risco'].index,
+                    y=dados_macro['risco']['embi'],
+                    name="EMBI+ Brasil",
+                    line=dict(color="#F44336", width=2)
+                ),
+                secondary_y=False
+            )
+        
+        # Adiciona o CDS de 5 anos
+        if 'GAP12_CRDSCBR5Y' in dados_macro['risco'].columns:
+            fig_risco.add_trace(
+                go.Scatter(
+                    x=dados_macro['risco'].index,
+                    y=dados_macro['risco']['GAP12_CRDSCBR5Y'],
+                    name="CDS Brasil 5 anos",
+                    line=dict(color="#1E88E5", width=2)
+                ),
+                secondary_y=False
+            )
+        
+        # Adiciona o IFIX
+        if 'ifix' in dados_macro['risco'].columns:
+            fig_risco.add_trace(
+                go.Scatter(
+                    x=dados_macro['risco'].index,
+                    y=dados_macro['risco']['ifix'],
+                    name="IFIX",
+                    line=dict(color="#4CAF50", width=2)
+                ),
+                secondary_y=True
+            )
+        
+        # Configura os eixos
+        fig_risco.update_layout(
+            title="Indicadores de Risco",
+            xaxis_title="Data",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        fig_risco.update_yaxes(title_text="Pontos (EMBI+ e CDS)", secondary_y=False)
+        fig_risco.update_yaxes(title_text="Pontos (IFIX)", secondary_y=True)
+        
+        # Adiciona o gráfico ao dicionário
+        graficos['risco'] = fig_risco
     
-    return dashboard
+    return graficos
 
 def criar_tabela_resumo_macro(resumo_macro: pd.DataFrame) -> go.Figure:
     """
-    Cria uma tabela com o resumo dos indicadores macroeconômicos.
+    Cria uma tabela com o resumo dos principais indicadores macroeconômicos.
     
     Args:
-        resumo_macro: DataFrame com o resumo dos indicadores macroeconômicos.
+        resumo_macro: DataFrame com o resumo dos indicadores.
         
     Returns:
-        go.Figure: Figura do Plotly com a tabela de resumo.
+        go.Figure: Figura com a tabela de resumo.
     """
-    if resumo_macro.empty:
-        # Retorna uma tabela vazia se não houver dados
-        fig = go.Figure()
-        fig.update_layout(
-            title="Resumo dos indicadores macroeconômicos não disponível"
-        )
-        return fig
-    
-    # Formata os valores para exibição
-    resumo_formatado = resumo_macro.copy()
-    
-    for idx in resumo_formatado.index:
-        if 'IPCA' in idx or 'IGP-M' in idx or 'Taxa' in idx or 'Desemprego' in idx:
-            # Formata percentuais
-            resumo_formatado.loc[idx, 'Valor'] = f"{resumo_formatado.loc[idx, 'Valor']:.2f}%"
-        elif 'EMBI' in idx or 'CDS' in idx:
-            # Formata pontos
-            resumo_formatado.loc[idx, 'Valor'] = f"{resumo_formatado.loc[idx, 'Valor']:.0f} pts"
-    
     # Cria a tabela
-    fig = go.Figure(data=[
-        go.Table(
-            header=dict(
-                values=["Indicador", "Valor", "Data"],
-                fill_color="#1E88E5",
-                align="left",
-                font=dict(color="white", size=14)
-            ),
-            cells=dict(
-                values=[
-                    resumo_formatado.index,
-                    resumo_formatado["Valor"],
-                    resumo_formatado["Data"]
-                ],
-                fill_color="#F5F5F5",
-                align="left",
-                font=dict(size=12)
-            )
+    fig = go.Figure(data=[go.Table(
+        header=dict(
+            values=['Indicador', 'Valor', 'Data'],
+            fill_color='#1E88E5',
+            align='left',
+            font=dict(color='white', size=12)
+        ),
+        cells=dict(
+            values=[
+                resumo_macro.index,
+                resumo_macro['Valor'].apply(lambda x: f"{x:.2f}%" if isinstance(x, (int, float)) else x),
+                resumo_macro['Data']
+            ],
+            fill_color='lavender',
+            align='left'
         )
-    ])
+    )])
     
     # Configura o layout
     fig.update_layout(
@@ -673,64 +381,76 @@ def criar_heatmap_correlacao_macro(dados_macro: Dict[str, pd.DataFrame]) -> go.F
     Cria um heatmap de correlação entre os principais indicadores macroeconômicos.
     
     Args:
-        dados_macro: Dicionário com DataFrames de dados macroeconômicos.
+        dados_macro: Dicionário com DataFrames dos dados macroeconômicos.
         
     Returns:
-        go.Figure: Figura do Plotly com o heatmap de correlação.
+        go.Figure: Figura com o heatmap de correlação.
     """
-    # Cria um DataFrame combinado com os principais indicadores
-    df_combinado = pd.DataFrame()
+    # Cria um DataFrame com os principais indicadores
+    df_correlacao = pd.DataFrame()
     
-    # Adiciona IPCA
-    if 'inflacao' in dados_macro and 'ipca_acumulado_12m' in dados_macro['inflacao'].columns:
-        df_combinado['IPCA'] = dados_macro['inflacao']['ipca_acumulado_12m']
+    # Adiciona o PIB
+    if 'pib' in dados_macro and not dados_macro['pib'].empty and 'pib_variacao' in dados_macro['pib'].columns:
+        df_correlacao['PIB (var. anual)'] = dados_macro['pib']['pib_variacao']
     
-    # Adiciona Selic
-    if 'juros' in dados_macro and 'selic_meta' in dados_macro['juros'].columns:
-        df_combinado['Selic'] = dados_macro['juros']['selic_meta']
+    # Adiciona a inflação
+    if 'inflacao' in dados_macro and not dados_macro['inflacao'].empty:
+        if 'ipca_acumulado_12m' in dados_macro['inflacao'].columns:
+            df_correlacao['IPCA (12 meses)'] = dados_macro['inflacao']['ipca_acumulado_12m']
+        if 'igpm_acumulado_12m' in dados_macro['inflacao'].columns:
+            df_correlacao['IGP-M (12 meses)'] = dados_macro['inflacao']['igpm_acumulado_12m']
     
-    # Adiciona Desemprego
-    if 'trabalho' in dados_macro and 'desemprego' in dados_macro['trabalho'].columns:
-        df_combinado['Desemprego'] = dados_macro['trabalho']['desemprego']
+    # Adiciona a taxa de juros
+    if 'juros' in dados_macro and not dados_macro['juros'].empty and 'selic_meta' in dados_macro['juros'].columns:
+        df_correlacao['Selic Meta'] = dados_macro['juros']['selic_meta']
     
-    # Adiciona EMBI+
-    if 'risco' in dados_macro and 'embi' in dados_macro['risco'].columns:
-        df_combinado['EMBI'] = dados_macro['risco']['embi']
+    # Adiciona a taxa de desemprego
+    if 'trabalho' in dados_macro and not dados_macro['trabalho'].empty and 'desemprego' in dados_macro['trabalho'].columns:
+        df_correlacao['Desemprego'] = dados_macro['trabalho']['desemprego']
     
-    # Adiciona CDS
-    if 'risco' in dados_macro and 'GAP12_CRDSCBR5Y' in dados_macro['risco'].columns:
-        df_combinado['CDS'] = dados_macro['risco']['GAP12_CRDSCBR5Y']
-    
-    # Se não houver dados suficientes, retorna um gráfico vazio
-    if df_combinado.empty or df_combinado.shape[1] < 2:
-        fig = go.Figure()
-        fig.update_layout(
-            title="Dados insuficientes para criar heatmap de correlação"
-        )
-        return fig
+    # Adiciona o risco
+    if 'risco' in dados_macro and not dados_macro['risco'].empty:
+        if 'embi' in dados_macro['risco'].columns:
+            df_correlacao['EMBI+'] = dados_macro['risco']['embi']
+        if 'GAP12_CRDSCBR5Y' in dados_macro['risco'].columns:
+            df_correlacao['CDS 5 anos'] = dados_macro['risco']['GAP12_CRDSCBR5Y']
     
     # Calcula a matriz de correlação
-    corr_matrix = df_combinado.corr()
-    
-    # Cria o heatmap
-    fig = go.Figure(data=go.Heatmap(
-        z=corr_matrix.values,
-        x=corr_matrix.columns,
-        y=corr_matrix.index,
-        colorscale='RdBu_r',
-        zmin=-1,
-        zmax=1,
-        text=np.round(corr_matrix.values, 2),
-        texttemplate="%{text:.2f}",
-        textfont={"size": 12},
-        hoverongaps=False
-    ))
-    
-    # Configura o layout
-    fig.update_layout(
-        title="Correlação entre Indicadores Macroeconômicos",
-        height=500,
-        template="plotly_white"
-    )
-    
-    return fig
+    if not df_correlacao.empty:
+        matriz_correlacao = df_correlacao.corr()
+        
+        # Cria o heatmap
+        fig = go.Figure(data=go.Heatmap(
+            z=matriz_correlacao.values,
+            x=matriz_correlacao.columns,
+            y=matriz_correlacao.index,
+            colorscale='RdBu_r',
+            zmin=-1,
+            zmax=1,
+            text=matriz_correlacao.round(2).values,
+            texttemplate="%{text}",
+            textfont={"size": 10}
+        ))
+        
+        # Configura o layout
+        fig.update_layout(
+            title="Correlação entre Indicadores Macroeconômicos",
+            height=500,
+            width=700
+        )
+        
+        return fig
+    else:
+        # Retorna um gráfico vazio se não houver dados
+        fig = go.Figure()
+        fig.update_layout(
+            title="Correlação entre Indicadores Macroeconômicos",
+            annotations=[dict(
+                text="Dados insuficientes para calcular correlações",
+                xref="paper",
+                yref="paper",
+                showarrow=False,
+                font=dict(size=14)
+            )]
+        )
+        return fig
